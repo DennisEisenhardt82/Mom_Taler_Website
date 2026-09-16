@@ -1,11 +1,10 @@
 /* Profil: Rang, Abzeichen, Rekorde, Profilwechsel, eigene PIN. */
 
 import { getStore, subscribe, activeChild } from "../modules/state.js";
-import { setActiveChild, logoutChild, childHasPin, verifyChildPin, setChildPin } from "../modules/kinder.js";
+import { setActiveChild, childHasPin, verifyChildPin, setChildPin } from "../modules/kinder.js";
 import { levelInfo, effectiveStreak, achievementProgress } from "../modules/gamification.js";
 import { progressBar, toast, openModal } from "../modules/ui.js";
 import { qs, qsa, escapeHtml, formatNumber, formatDate, html } from "../modules/utils.js";
-import { pageHref } from "../script.js";
 
 function render() {
   const root = qs("[data-profile]");
@@ -73,15 +72,9 @@ function render() {
           <span class="profile-tile__meta">${formatNumber(c.balance)} Momtaler${childHasPin(c.id) ? " · 🔒" : ""}</span>
         </button>`).join("")}
       </div>
-    </section>` : ""}
-
-    <button type="button" class="btn btn--ghost btn--lg" data-logout>Abmelden</button>`;
+    </section>` : ""}`;
 
   qs("[data-manage-pin]", root).addEventListener("click", () => openPinForm(child, hasPin));
-  qs("[data-logout]", root).addEventListener("click", () => {
-    logoutChild();
-    window.location.href = pageHref("index");
-  });
   qsa("[data-pick]", root).forEach((b) => b.addEventListener("click", () => switchTo(b.dataset.pick, child.id)));
 }
 

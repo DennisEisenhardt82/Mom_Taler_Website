@@ -4,7 +4,8 @@
 import { ensureStore } from "./modules/data.js";
 import { getStore, subscribe, activeChild, storageWarning } from "./modules/state.js";
 import { effectiveStreak } from "./modules/gamification.js";
-import { countUp, toast, errorCard } from "./modules/ui.js";
+import { logoutChild } from "./modules/kinder.js";
+import { countUp, toast, errorCard, confirmDialog } from "./modules/ui.js";
 import { qs, qsa, html, escapeHtml } from "./modules/utils.js";
 
 const PAGES = {
@@ -60,6 +61,24 @@ function initThemeToggle() {
       const next = THEMES[(THEMES.indexOf(currentTheme()) + 1) % THEMES.length];
       applyTheme(next);
       toast(`Farbschema: ${THEME_LABELS[next]}`, { icon: THEME_ICONS[next], timeout: 1500 });
+    });
+  });
+}
+
+/* ---------- Abmelden ---------- */
+
+function initLogout() {
+  qsa("[data-logout]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const child = activeChild();
+      const ok = await confirmDialog({
+        title: "Abmelden?",
+        text: child ? `${child.name} wird abgemeldet. Zurück geht es über die Anmeldung auf der Startseite.` : "Du wirst abgemeldet.",
+        confirmLabel: "Abmelden",
+      });
+      if (!ok) return;
+      logoutChild();
+      window.location.href = pageHref("index");
     });
   });
 }
@@ -166,6 +185,7 @@ async function detectCleanUrls() {
 }
 
 export function pageHref(name) {
+  if (name === "index") return needsExtension ? "index.html" : "./";
   return needsExtension ? `${name}.html` : name;
 }
 
@@ -184,6 +204,7 @@ async function boot() {
   initThemeToggle();
   initTracking();
   initNav();
+  initLogout();
   await detectCleanUrls();
   if (needsExtension) {
     // Dynamisch gerenderte Inhalte ebenfalls anpassen
