@@ -1,0 +1,15 @@
+[
+  { "id": "first-task",   "title": "Erste Quest",       "description": "Deine erste Quest erledigt.",           "icon": "🗡️", "type": "tasks",   "goal": 1 },
+  { "id": "tasks-10",     "title": "Fleißige Hand",     "description": "10 Quests erledigt.",                   "icon": "🛡️", "type": "tasks",   "goal": 10 },
+  { "id": "tasks-50",     "title": "Questmeister",      "description": "50 Quests erledigt.",                   "icon": "⚔️", "type": "tasks",   "goal": 50 },
+  { "id": "tasks-100",    "title": "Legende der Gilde", "description": "100 Quests erledigt.",                  "icon": "🐉", "type": "tasks",   "goal": 100 },
+  { "id": "coins-100",    "title": "Erster Schatz",     "description": "100 Momtaler verdient.",                "icon": "🪙", "type": "earned",  "goal": 100 },
+  { "id": "coins-500",    "title": "Goldsammler",       "description": "500 Momtaler verdient.",                "icon": "💰", "type": "earned",  "goal": 500 },
+  { "id": "coins-1000",   "title": "Schatzkammer voll", "description": "1.000 Momtaler verdient.",              "icon": "👑", "type": "earned",  "goal": 1000 },
+  { "id": "streak-3",     "title": "Dranbleiber",       "description": "3 Tage am Stück eine Quest erledigt.",  "icon": "🔥", "type": "streak",  "goal": 3 },
+  { "id": "streak-7",     "title": "Eine ganze Woche",  "description": "7 Tage am Stück eine Quest erledigt.",  "icon": "🌟", "type": "streak",  "goal": 7 },
+  { "id": "streak-30",    "title": "Unaufhaltsam",      "description": "30 Tage am Stück eine Quest erledigt.", "icon": "🏆", "type": "streak",  "goal": 30 },
+  { "id": "first-reward", "title": "Erste Belohnung",   "description": "Deine erste Belohnung eingelöst.",      "icon": "🎁", "type": "rewards", "goal": 1 },
+  { "id": "saver-500",    "title": "Sparfuchs",         "description": "500 Momtaler auf einmal gespart.",      "icon": "🦊", "type": "balance", "goal": 500 },
+  { "id": "early-bird",   "title": "Frühaufsteher",     "description": "Eine Quest vor 9 Uhr erledigt.",        "icon": "🌅", "type": "early",   "goal": 1 }
+]

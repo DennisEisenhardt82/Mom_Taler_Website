@@ -1,0 +1,10 @@
+[
+  { "id": "r-nachtisch",  "title": "Extra Nachtisch",            "description": "Ein zweiter Nachtisch nach dem Abendessen.",         "cost": 50,   "icon": "🍦", "active": true },
+  { "id": "r-essen",      "title": "Lieblingsessen",             "description": "Du bestimmst, was es am Wochenende gibt.",           "cost": 100,  "icon": "🍕", "active": true },
+  { "id": "r-bildschirm", "title": "30 Minuten Bildschirmzeit",  "description": "Extra Zeit fürs Tablet oder die Konsole.",           "cost": 120,  "icon": "🎮", "active": true },
+  { "id": "r-film",       "title": "Filmabend",                  "description": "Du darfst den Film aussuchen. Popcorn inklusive.",   "cost": 250,  "icon": "🎬", "active": true },
+  { "id": "r-laenger",    "title": "Eine Stunde länger auf",     "description": "Am Freitag oder Samstag.",                           "cost": 300,  "icon": "🌙", "active": true },
+  { "id": "r-spielzeug",  "title": "Kleines Spielzeug",          "description": "Bis 15 Euro, du suchst es aus.",                     "cost": 500,  "icon": "🧸", "active": true },
+  { "id": "r-freund",     "title": "Übernachtungsbesuch",        "description": "Ein Freund oder eine Freundin darf übernachten.",    "cost": 600,  "icon": "🏕️", "active": true },
+  { "id": "r-ausflug",    "title": "Besonderer Ausflug",         "description": "Zoo, Freizeitpark oder Kletterhalle.",               "cost": 1000, "icon": "🎢", "active": true }
+]

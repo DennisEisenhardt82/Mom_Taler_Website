@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Momtaler – Deine Quests. Deine Momtaler. Deine Belohnungen.</title>
+  <meta name="description" content="Momtaler ist das spielerische Belohnungssystem für Familien: Quests erledigen, Momtaler sammeln, Belohnungen aus der Schatzkammer holen. Läuft komplett im Browser.">
+  <meta name="theme-color" content="#B3261E">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Momtaler – Deine Quests. Deine Momtaler. Deine Belohnungen.">
+  <meta property="og:description" content="Momtaler ist das spielerische Belohnungssystem für Familien: Quests erledigen, Momtaler sammeln, Belohnungen aus der Schatzkammer holen. Läuft komplett im Browser.">
+  <meta property="og:image" content="assets/img/og-image.jpg">
+  <meta property="og:locale" content="de_DE">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/img/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/img/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="preload" href="assets/fonts/nunito-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/eagle-lake-regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css?v=1.0">
+  <script src="assets/js/theme-init.js"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Momtaler",
+    "description": "Spielerisches Belohnungssystem für Familien: Kinder erledigen Quests, sammeln Momtaler und lösen sie gegen Belohnungen ein.",
+    "applicationCategory": "FamilyApplication",
+    "operatingSystem": "Web",
+    "inLanguage": "de",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+  }
+  </script>
+</head>
+<body data-page="index" class="page-index">
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+  <!-- header:start -->
+<header class="topbar">
+  <a class="topbar__logo" href="./" aria-label="Momtaler, zur Startseite">
+    <img src="assets/img/logo.svg" alt="" width="36" height="36">
+    <span class="topbar__wordmark">Momtaler</span>
+  </a>
+  <div class="topbar__status" data-status hidden>
+    <span class="chip chip--streak" data-streak hidden></span>
+    <a class="chip chip--coins" href="belohnungen" aria-label="Zur Schatzkammer">
+      <span class="chip__coin" aria-hidden="true">🪙</span>
+      <span data-balance>0</span>
+    </a>
+    <a class="topbar__avatar" href="profil" data-avatar aria-label="Profil"></a>
+  </div>
+  <button type="button" class="topbar__theme" data-theme-toggle aria-label="Farbschema wechseln">🌗</button>
+</header>
+<nav class="nav" aria-label="Hauptnavigation">
+  <a href="dashboard" data-nav="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Start</span></a>
+  <a href="aufgaben" data-nav="aufgaben"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm2 5h10M7 12h10M7 16h6"/></svg><span>Quests</span></a>
+  <a href="belohnungen" data-nav="belohnungen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h18v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 10l2-5h14l2 5M12 10v11M9 14h6"/></svg><span>Schatz</span></a>
+  <a href="profil" data-nav="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Profil</span></a>
+  <a href="verlauf" data-nav="verlauf" class="nav__desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v5l3 2M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg><span>Verlauf</span></a>
+  <a href="statistik" data-nav="statistik" class="nav__desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Statistik</span></a>
+  <a href="eltern" data-nav="eltern" class="nav__desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg><span>Eltern</span></a>
+  <a href="einstellungen" data-nav="einstellungen" class="nav__desktop"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Einstellungen</span></a>
+  <button type="button" class="nav__more" data-nav-more aria-expanded="false" aria-controls="nav-more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg><span>Mehr</span></button>
+  <div class="nav__sheet" id="nav-more">
+    <a href="verlauf">📜 Verlauf</a>
+    <a href="statistik">📊 Statistik</a>
+    <a href="eltern">🛡️ Eltern</a>
+    <a href="einstellungen">⚙️ Einstellungen</a>
+  </div>
+</nav>
+  <!-- header:end -->
+
+  <main id="main" class="app app--landing">
+    <section class="hero">
+      <picture class="hero__media">
+        <source media="(max-width: 639px)" srcset="assets/img/scene-burg-mobil.webp" type="image/webp">
+        <source srcset="assets/img/scene-burg.webp" type="image/webp">
+        <img src="assets/img/scene-burg.jpg" alt="Eine Burg mit roten Dächern und einer Fahne auf einem grünen Hügel, dahinter Berge und ein See" width="752" height="505" loading="eager" fetchpriority="high">
+      </picture>
+      <div class="hero__content">
+        <p class="eyebrow eyebrow--light">Willkommen in der Gilde</p>
+        <h1 class="hero__title">Deine Quests.<br>Deine Momtaler.<br>Deine&nbsp;Belohnungen.</h1>
+        <p class="hero__lead">Erledige Aufgaben, sammle Momtaler und öffne die Truhen in der Schatzkammer. Für Kinder gemacht, von Eltern&nbsp;verwaltet.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary btn--lg" href="dashboard" data-cta="start_btn_starten_hero">Jetzt starten</a>
+          <a class="btn btn--ghost-light btn--lg" href="#so-gehts" data-cta="start_link_sogehts_hero">So funktioniert es</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--profiles" aria-labelledby="profiles-title">
+      <div class="section__head">
+        <h2 class="section__title" id="profiles-title">Wer spielt heute?</h2>
+      </div>
+      <div data-profiles><noscript><p class="banner banner--warn">Momtaler braucht JavaScript. Bitte aktiviere es in deinem Browser.</p></noscript></div>
+    </section>
+
+    <section class="section" id="so-gehts" aria-labelledby="how-title">
+      <div class="section__head">
+        <p class="eyebrow">So geht es</p>
+        <h2 class="section__title" id="how-title">Drei Schritte bis zur&nbsp;Truhe</h2>
+      </div>
+      <div class="steps">
+        <article class="step">
+          <span class="step__icon" aria-hidden="true">📜</span>
+          <h3 class="step__title">Quest wählen</h3>
+          <p>Am Questbrett hängen die Aufgaben: Zimmer aufräumen, lesen, Tisch decken. Jede zeigt, wie viele Momtaler sie&nbsp;bringt.</p>
+        </article>
+        <article class="step">
+          <span class="step__icon" aria-hidden="true">🪙</span>
+          <h3 class="step__title">Momtaler sammeln</h3>
+          <p>Erledigt? Ein Tipp auf „Erledigt!“ und die Münzen fliegen in deine Schatzkammer. Dazu gibt es XP, Level und&nbsp;Abzeichen.</p>
+        </article>
+        <article class="step">
+          <span class="step__icon" aria-hidden="true">🎁</span>
+          <h3 class="step__title">Truhe öffnen</h3>
+          <p>Genug gespart? Dann löse eine Belohnung ein: Filmabend, Lieblingsessen oder ein besonderer&nbsp;Ausflug.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--parents" aria-labelledby="parents-title">
+      <div class="card card--scene card--gilde">
+        <div class="card__body">
+          <p class="eyebrow">Für Eltern</p>
+          <h2 class="section__title" id="parents-title">Der Gildenschalter</h2>
+          <p>Hier legt ihr Kinder an, hängt Quests aus, bestimmt Belohnungen und bucht Momtaler von Hand. Alles bleibt auf eurem Gerät: kein Konto, kein Server, kein&nbsp;Tracking.</p>
+          <a class="btn btn--wood" href="eltern" data-cta="start_btn_eltern_gilde">Zum Gildenschalter</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- footer:start -->
+<footer class="footer">
+  <nav class="footer__links" aria-label="Footer-Navigation">
+    <a href="./">Start</a>
+    <a href="eltern">Eltern</a>
+    <a href="einstellungen">Einstellungen</a>
+    <a href="impressum">Impressum</a>
+    <a href="datenschutz">Datenschutz</a>
+  </nav>
+  <p class="footer__copy">&copy; <span id="footer-year">2026</span> Momtaler · Läuft komplett in deinem Browser, ohne Server und ohne&nbsp;Tracking. Alle Angaben ohne&nbsp;Gewähr.</p>
+</footer>
+  <!-- footer:end -->
+  <script type="module" src="assets/js/script.js?v=1.0"></script>
+</body>
+</html>

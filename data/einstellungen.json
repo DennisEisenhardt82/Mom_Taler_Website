@@ -1,0 +1,15 @@
+{
+  "theme": "system",
+  "reduceMotion": false,
+  "parentPinHash": null,
+  "dailyGoal": 3,
+  "weeklyGoal": 15,
+  "xpPerLevel": 100,
+  "categories": {
+    "haushalt": { "label": "Haushalt", "icon": "🏠" },
+    "schule":   { "label": "Schule",   "icon": "🎒" },
+    "sport":    { "label": "Sport",    "icon": "⚽" },
+    "sozial":   { "label": "Sozial",   "icon": "💛" },
+    "alltag":   { "label": "Alltag",   "icon": "☀️" }
+  }
+}

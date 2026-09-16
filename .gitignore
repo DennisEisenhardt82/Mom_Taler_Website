@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editoren
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node (falls je Tooling dazukommt)
+node_modules/
+
+# Umgebungs-/Kundendaten
+.env
+briefing.md
+Projekt-Dokumentation.md
+
+# CloudeX: Staging-Passwortschutz (nur per /pwweb erzeugt, nie committen)
+gate.php
+assets/css/login.css
+
+# Rohdaten / Arbeitsdateien (nicht Teil der ausgelieferten Website)
+creative-cursor-pack/
+*.ttf
+ChatGPT Image*.png
+momtaler umbau prompt.txt
+projektplanung.md

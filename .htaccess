@@ -1,0 +1,241 @@
+# =========================================================================
+# .htaccess - robustes Standard-Template (statische Seiten)
+# -------------------------------------------------------------------------
+# Grundsaetze (machen die Datei 500-sicher und ueberall lauffaehig):
+#   - JEDE Direktive ist in das passende <IfModule> gekapselt. Fehlt ein
+#     Modul auf dem Hoster, ueberspringt Apache den Block - statt 500.
+#   - KEIN festes "RewriteBase". Apache leitet den Basispfad selbst ab,
+#     damit dieselbe Datei im Webroot UND in einem Unterordner laeuft
+#     (example.com/ genauso wie example.com/projekt/unterseite).
+#   - KEINE Leading-Slashes in RewriteRule-Zielen und keine absoluten
+#     Redirects auf "/". Alles relativ = host- und ordner-unabhaengig.
+#   - HTTPS-Zwang, www-Kanonisierung, HSTS und CSP sind OPT-IN-Bloecke
+#     (unten klar markiert) - sie sind absichtlich AUS, weil sie sonst
+#     Staging/Preview/Hoster-ohne-SSL kaputt machen.
+# =========================================================================
+
+
+# -------------------------------------------------------------------------
+# 1) Grund-Verhalten (immer aktiv, 500-sicher)
+# -------------------------------------------------------------------------
+
+# Standard-Zeichensatz fuer Textantworten
+AddDefaultCharset utf-8
+
+# Verzeichnis-Auflistung verbieten (kein oeffentliches Datei-Listing).
+# Steht bewusst NICHT in <IfModule> - "Options -Indexes" ist auf nahezu
+# allen Hostern per AllowOverride erlaubt. Erzeugt der Hoster damit doch
+# einen 500, diese eine Zeile auskommentieren (siehe Anpass-Regel).
+Options -Indexes
+
+# Index-Datei (gate.php wird NICHT vorausgesetzt - nur per On-Demand-Befehl)
+DirectoryIndex index.html index.php
+
+
+# -------------------------------------------------------------------------
+# 2) Sensible Dateien sperren
+# -------------------------------------------------------------------------
+<IfModule mod_authz_core.c>
+  # Apache 2.4: Dotfiles, Backups und VCS-Reste blocken
+  <FilesMatch "(^\.|~$|\.(bak|old|orig|swp|dist|log|sql|env)$)">
+    Require all denied
+  </FilesMatch>
+  # .htaccess selbst nie ausliefern
+  <Files ".htaccess">
+    Require all denied
+  </Files>
+</IfModule>
+
+
+# -------------------------------------------------------------------------
+# 3) Trailing-Slash kanonisieren (URL OHNE Slash) - ausser bei echten Ordnern
+# -------------------------------------------------------------------------
+# Warum: dokument-relative Pfade (./css/...) loesen je nach Trailing-Slash
+# unterschiedlich auf. /blog -> Basis "/" (korrekt), /blog/ -> Basis "/blog/"
+# (CSS/Bilder 404).
+#
+# DirectorySlash bleibt bewusst AN (Apache-Standard): Wird dieses Projekt in
+# einem echten Unterordner eines fremden DocumentRoots ausgeliefert (z.B.
+# Vorschau-Systeme wie ADence unter domain.de/id1234/), IST der Projektordner
+# selbst ein echtes Verzeichnis. Mit "DirectorySlash Off" kann Apache dort
+# den Aufruf OHNE Trailing-Slash (domain.de/id1234, wie ihn Vorschau-Links
+# typischerweise verwenden) nicht mehr zu DirectoryIndex aufloesen und liefert
+# 403 statt der Seite - live bestaetigt. Die einzige Endlosschleifen-Gefahr
+# (/blog -> /blog/ -> /blog -> ...) betrifft nur Seiten, die zufaellig GENAUSO
+# heissen wie ein echter Unterordner - der Strip-Rewrite unten schliesst
+# echte Verzeichnisse deshalb per "!-d" explizit aus, statt DirectorySlash
+# global abzuschalten.
+# Hinweis: lokaler "php -S" wertet .htaccess NICHT aus -> nur live sichtbar.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Trailing-Slash entfernen (kanonische URL ohne Slash) - aber NICHT bei
+  # echten Verzeichnissen (!-d), sonst Schleife mit DirectorySlash On.
+  # Bedingung ueber THE_REQUEST = nur echter Browser-Request.
+  # %1 enthaelt den VOLLEN Pfad ab Domain-Wurzel (inkl. evtl. Unterordner),
+  # daher ist das fuehrende / hier korrekt UND subordner-portabel.
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{THE_REQUEST} \s/+([^?\s]+?)/+[\s?] [NC]
+  RewriteRule ^ /%1 [L,R=301]
+</IfModule>
+
+
+# -------------------------------------------------------------------------
+# 4) Saubere URLs (extensionslos) - zweigleisig abgesichert
+# -------------------------------------------------------------------------
+
+# Primaer: mod_rewrite (auf den meisten Hostern aktiv)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # KEIN "RewriteBase" - bewusst weggelassen (Subordner-Portabilitaet)
+
+  # /impressum -> impressum.html, sofern die Datei existiert und es kein
+  # echtes Verzeichnis ist. -f/-d-Guards verhindern Endlosschleifen.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME}.html -f
+  RewriteRule ^(.+?)/?$ $1.html [L]
+</IfModule>
+
+# Fallback OHNE mod_rewrite: MultiViews per mod_negotiation.
+# ACHTUNG: "Options +MultiViews" kann auf Hostern, die Options sperren,
+# einen HTTP 500 ausloesen. Deshalb ABSICHTLICH auskommentiert.
+# Nur einkommentieren, wenn mod_rewrite NICHT verfuegbar ist UND der
+# Hoster Options-Overrides erlaubt (vorher testen, siehe Anpass-Regel).
+# <IfModule mod_negotiation.c>
+#   Options +MultiViews
+# </IfModule>
+
+
+# -------------------------------------------------------------------------
+# 5) Eigene Fehlerseiten
+# -------------------------------------------------------------------------
+# WICHTIG: Fuehrender Slash ist hier Pflicht (anders als bei RewriteRule-
+# Zielen!). Ohne "/" interpretiert Apache den Wert NICHT als Dateipfad,
+# sondern gibt ihn woertlich als Text aus ("403.html" als sichtbarer
+# Seiteninhalt statt der echten Fehlerseite - live gegen Apache bestaetigt).
+# ErrorDocument liefert die Seite trotzdem mit KORREKTEM Statuscode
+# (404/403/500) aus - anders als ein internes Rewrite, das 200 liefert.
+# Bei echtem Unterordner-Betrieb auf SHARED Hosting (Projekt liegt in einem
+# Unterordner eines fremden DocumentRoots, ist selbst NICHT als eigene Root
+# gemappt) den Pfad manuell um das Unterordner-Praefix ergaenzen.
+ErrorDocument 404 /404.html
+ErrorDocument 403 /403.html
+ErrorDocument 500 /500.html
+
+
+# -------------------------------------------------------------------------
+# 6) Gzip / Kompression
+# -------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE text/javascript application/javascript
+  AddOutputFilterByType DEFLATE application/json application/xml
+  AddOutputFilterByType DEFLATE application/manifest+json
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE font/woff2 font/woff font/ttf
+</IfModule>
+
+
+# -------------------------------------------------------------------------
+# 7) Browser-Caching (mod_expires)
+# Bilder/Fonts: 1 Jahr - CSS/JS: 1 Monat - HTML: 1 Stunde
+# -------------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault                          "access plus 1 week"
+  # Bilder
+  ExpiresByType image/jpeg                "access plus 1 year"
+  ExpiresByType image/png                 "access plus 1 year"
+  ExpiresByType image/gif                 "access plus 1 year"
+  ExpiresByType image/webp                "access plus 1 year"
+  ExpiresByType image/avif                "access plus 1 year"
+  ExpiresByType image/svg+xml             "access plus 1 year"
+  ExpiresByType image/x-icon              "access plus 1 year"
+  # Fonts
+  ExpiresByType font/woff2                "access plus 1 year"
+  ExpiresByType font/woff                 "access plus 1 year"
+  ExpiresByType font/ttf                  "access plus 1 year"
+  # Code
+  ExpiresByType text/css                  "access plus 1 month"
+  ExpiresByType text/javascript           "access plus 1 month"
+  ExpiresByType application/javascript    "access plus 1 month"
+  # Dokumente / Medien
+  ExpiresByType application/pdf           "access plus 1 month"
+  ExpiresByType video/mp4                 "access plus 1 month"
+  ExpiresByType application/manifest+json "access plus 1 week"
+  # HTML kurz halten, damit Inhaltsupdates schnell sichtbar werden
+  ExpiresByType text/html                 "access plus 1 hour"
+</IfModule>
+
+# ETags abschalten - mit Expires/Cache-Control redundant und stoeren
+# hinter Load-Balancern. Guard, weil FileETag mod_headers nicht braucht.
+<IfModule mod_headers.c>
+  Header unset ETag
+</IfModule>
+FileETag None
+
+
+# -------------------------------------------------------------------------
+# 8) Security-Header (ohne HSTS - HSTS steckt im HTTPS-Opt-in unten)
+# -------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+
+  # ---- Content-Security-Policy: PRO PROJEKT ANPASSEN -------------------
+  # Standardmaessig AUSKOMMENTIERT, weil eine zu enge CSP echte Inhalte
+  # (Maps-iframe, Consent-Tool, eingebettetes Video, externes Script)
+  # still blockiert. Erst aktivieren, wenn alle eingebundenen Quellen
+  # bekannt sind, und dann passend erweitern (siehe Anpass-Regel).
+  #
+  # Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+</IfModule>
+
+
+# =========================================================================
+# OPT-IN A) HTTPS ERZWINGEN  (erst aktivieren, wenn SSL sicher laeuft!)
+# -------------------------------------------------------------------------
+# Vor dem Aktivieren pruefen: Ruft die Seite ueber https:// sauber auf
+# (gueltiges Zertifikat)? Auf Staging/Preview ohne SSL = AUS lassen.
+# Zum Aktivieren: die Zeilen zwischen "BEGIN" und "END" einkommentieren.
+# =========================================================================
+# <IfModule mod_rewrite.c>
+#   # BEGIN HTTPS-Zwang
+#   RewriteEngine On
+#   RewriteCond %{HTTPS} off
+#   # Hinter manchen Proxys/CDNs steht der echte Wert in diesem Header:
+#   RewriteCond %{HTTP:X-Forwarded-Proto} !https
+#   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#   # END HTTPS-Zwang
+# </IfModule>
+#
+# # HSTS NUR zusammen mit erzwungenem HTTPS setzen (sonst sperrt sich
+# # der Browser fuer ein Jahr auf HTTPS aus, wenn SSL mal ausfaellt):
+# <IfModule mod_headers.c>
+#   Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+# </IfModule>
+
+
+# =========================================================================
+# OPT-IN B) DOMAIN KANONISIEREN  (www <-> non-www) - projektabhaengig
+# -------------------------------------------------------------------------
+# Nur EINE Variante aktivieren. %{REQUEST_SCHEME} statt hartem https://,
+# damit es auch auf reinen HTTP-Hosts nicht kaputt umleitet.
+# =========================================================================
+# <IfModule mod_rewrite.c>
+#   RewriteEngine On
+#
+#   # Variante 1: www ENTFERNEN  (www.example.com -> example.com)
+#   RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+#   RewriteRule ^ %{REQUEST_SCHEME}://%1%{REQUEST_URI} [L,R=301]
+#
+#   # Variante 2: www ERZWINGEN  (example.com -> www.example.com)
+#   # (Variante 1 dann auskommentiert lassen!)
+#   # RewriteCond %{HTTP_HOST} !^www\. [NC]
+#   # RewriteCond %{HTTP_HOST} ^(.+)$ [NC]
+#   # RewriteRule ^ %{REQUEST_SCHEME}://www.%1%{REQUEST_URI} [L,R=301]
+# </IfModule>

@@ -1,0 +1,14 @@
+{
+  "name": "Momtaler",
+  "short_name": "Momtaler",
+  "description": "Quests erledigen, Momtaler sammeln, Belohnungen einlösen.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F4E8D0",
+  "theme_color": "#B3261E",
+  "lang": "de",
+  "icons": [
+    { "src": "assets/img/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/img/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

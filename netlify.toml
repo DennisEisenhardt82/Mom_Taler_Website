@@ -1,0 +1,39 @@
+# Netlify-Konfiguration für Momtaler (statisch, kein Build-Schritt).
+# Ersetzt auf Netlify die Aufgaben der .htaccess (die dort ignoriert wird).
+#
+# Saubere URLs (/dashboard -> dashboard.html) beherrscht Netlify für Seiten mit
+# vorhandener .html-Datei bereits von selbst ("Pretty URLs") - dafür ist hier
+# keine eigene Redirect-Regel nötig und auch keine sinnvoll, ohne echte
+# vorhandene Dateien zu verdecken.
+
+[build]
+  publish = "."
+
+# Eigene 404-Seite mit korrektem Status 404 statt Netlifys Standardseite.
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+[[headers]]
+  for = "/partials/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
