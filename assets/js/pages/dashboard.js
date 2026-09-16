@@ -1,12 +1,12 @@
 /* Dashboard: Schatzkammer-Karte, Gildenrang, heutige Quests, nächste Belohnung, Aktivität. */
 
-import { getStore, subscribe, activeChild } from "../modules/state.js";
-import { tasksFor, todayCompletions, weekCompletions } from "../modules/aufgaben.js";
+import { getStore, subscribe, activeChild, taskById } from "../modules/state.js";
+import { tasksFor, todayCompletions, weekCompletions, unseenDecisions, markDecisionsSeen } from "../modules/aufgaben.js";
 import { nextReward } from "../modules/belohnungen.js";
 import { levelInfo, effectiveStreak } from "../modules/gamification.js";
 import { transactionsFor } from "../modules/transaktionen.js";
 import { questCard, bindQuestActions } from "../modules/questkarte.js";
-import { progressBar, emptyState, countUp } from "../modules/ui.js";
+import { progressBar, emptyState, countUp, toast, coinBurst } from "../modules/ui.js";
 import { qs, escapeHtml, formatNumber, formatSigned, greeting, formatTime, relativeDay } from "../modules/utils.js";
 
 function render() {
@@ -112,10 +112,37 @@ function render() {
 
 let lastBalance = null;
 
+/* Zeigt, was seit dem letzten Besuch am Gildenschalter entschieden wurde
+   (bestätigt = Feier, abgelehnt = ruhiger Hinweis), dann als gesehen markieren. */
+function announceDecisions(child) {
+  const unseen = unseenDecisions(child.id);
+  if (!unseen.length) return;
+  const approved = unseen.filter((c) => c.status === "approved");
+  const rejected = unseen.filter((c) => c.status === "rejected");
+
+  approved.forEach((c, i) => {
+    const task = taskById(c.taskId);
+    setTimeout(() => {
+      toast(`„${task?.title || "Quest"}“ wurde bestätigt: +${formatNumber(c.reward)} Momtaler!`, { type: "success", icon: "🪙" });
+      coinBurst(qs("[data-treasure]") || document.body, qs("[data-treasure]"), 6);
+    }, i * 700);
+  });
+  rejected.forEach((c, i) => {
+    const task = taskById(c.taskId);
+    setTimeout(() => {
+      toast(`„${task?.title || "Quest"}“ wurde nicht bestätigt${c.rejectReason ? `: ${c.rejectReason}` : ". Du kannst es noch einmal versuchen."}`, { type: "info", icon: "🔁", timeout: 5000 });
+    }, (approved.length + i) * 700);
+  });
+
+  markDecisionsSeen(child.id);
+}
+
 export async function init() {
   const root = qs("[data-dashboard]");
   if (!root) return;
   render();
   bindQuestActions(root);
+  const child = activeChild();
+  if (child) announceDecisions(child);
   subscribe(() => render());
 }

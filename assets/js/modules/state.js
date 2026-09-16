@@ -34,9 +34,8 @@ export function storageWarning() {
 
 /* Bequeme Zugriffe */
 export function activeChild() {
-  if (!store) return null;
-  const id = store.settings.activeChildId;
-  return store.children.find((c) => c.id === id) || store.children[0] || null;
+  if (!store || !store.settings.activeChildId) return null;
+  return store.children.find((c) => c.id === store.settings.activeChildId) || null;
 }
 
 export function childById(id) {

@@ -24,9 +24,5 @@ Projekt-Dokumentation.md
 gate.php
 assets/css/login.css
 
-# Rohdaten / Arbeitsdateien (nicht Teil der ausgelieferten Website)
-creative-cursor-pack/
-*.ttf
-ChatGPT Image*.png
-momtaler umbau prompt.txt
-projektplanung.md
+# Private Projektplanung (kein Teil der ausgelieferten Website)
+docs/planning/

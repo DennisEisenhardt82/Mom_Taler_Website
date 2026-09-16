@@ -34,6 +34,8 @@ assets/js/pages/                                Seiten-spezifische Logik
 assets/fonts/                                   lokal eingebundene Schriften (kein Google-Fonts-CDN)
 data/                                           Ausgangsdaten (Kinder, Quests, Belohnungen, Abzeichen)
 partials/                                       Header/Footer als Single Source, in jede Seite eingebaut
+docs/licenses/                                  Lizenz-/Attributionsnachweise der verwendeten Assets
+docs/planning/                                  private Projektplanung (nicht Teil des Repos)
 ```
 
 ## Lokal starten

@@ -2,14 +2,14 @@
 
 import { getStore, subscribe, childById } from "../modules/state.js";
 import * as eltern from "../modules/eltern.js";
-import { addChild, updateChild, removeChild, AVATARS, COLORS } from "../modules/kinder.js";
+import { addChild, updateChild, removeChild, removeChildPin, childHasPin, AVATARS, COLORS } from "../modules/kinder.js";
 import { transactionsFor, TYPES } from "../modules/transaktionen.js";
-import { undoCompletion, RECURRENCE } from "../modules/aufgaben.js";
+import { undoCompletion, RECURRENCE, pendingCompletions, approveCompletion, rejectCompletion } from "../modules/aufgaben.js";
 import { totals } from "../modules/statistik.js";
 import { toast, confirmDialog, openModal, emptyState } from "../modules/ui.js";
 import { qs, qsa, escapeHtml, formatNumber, formatSigned, formatTime, relativeDay, html } from "../modules/utils.js";
 
-let tab = "kinder";
+let tab = "freigaben";
 let unlocked = false;
 let kontoChild = null;
 
@@ -57,10 +57,18 @@ function render() {
     renderGate(root);
     return;
   }
-  const tabs = [["kinder", "Kinder"], ["quests", "Quests"], ["belohnungen", "Belohnungen"], ["konto", "Konto"], ["uebersicht", "Übersicht"]];
+  const pendingCount = pendingCompletions().length;
+  const tabs = [
+    ["freigaben", `Freigaben${pendingCount ? ` (${pendingCount})` : ""}`],
+    ["kinder", "Kinder"],
+    ["quests", "Quests"],
+    ["belohnungen", "Belohnungen"],
+    ["konto", "Konto"],
+    ["uebersicht", "Übersicht"],
+  ];
   root.innerHTML = `
     <div class="tabs" role="tablist" aria-label="Bereiche">
-      ${tabs.map(([k, l]) => `<button type="button" role="tab" class="tabs__btn ${tab === k ? "is-active" : ""}" aria-selected="${tab === k}" data-tab="${k}" id="tab-${k}" aria-controls="panel-${k}">${l}</button>`).join("")}
+      ${tabs.map(([k, l]) => `<button type="button" role="tab" class="tabs__btn ${tab === k ? "is-active" : ""} ${k === "freigaben" && pendingCount ? "tabs__btn--alert" : ""}" aria-selected="${tab === k}" data-tab="${k}" id="tab-${k}" aria-controls="panel-${k}">${l}</button>`).join("")}
     </div>
     <div class="tabs__panel" role="tabpanel" id="panel-${tab}" aria-labelledby="tab-${tab}" data-panel></div>
     ${eltern.hasPin() ? '<p class="hint"><button type="button" class="link" data-lock>Gildenschalter sperren</button></p>' : '<p class="hint">Noch keine PIN gesetzt. <a href="einstellungen">Jetzt in den Einstellungen festlegen</a>, damit Kinder hier nicht ohne dich landen.</p>'}`;
@@ -74,7 +82,61 @@ function render() {
     render();
   });
   const panel = qs("[data-panel]", root);
-  ({ kinder: renderKinder, quests: renderQuests, belohnungen: renderRewards, konto: renderKonto, uebersicht: renderOverview })[tab](panel);
+  ({ freigaben: renderApprovals, kinder: renderKinder, quests: renderQuests, belohnungen: renderRewards, konto: renderKonto, uebersicht: renderOverview })[tab](panel);
+}
+
+/* ---------- Freigaben (Aufgaben-Dashboard) ---------- */
+
+function renderApprovals(panel) {
+  const store = getStore();
+  const pending = pendingCompletions();
+  panel.innerHTML = `
+    <div class="section__head"><h2 class="section__title">Freigaben</h2><p class="section__lead">Diese Quests warten auf deine Bestätigung, bevor Momtaler gutgeschrieben werden.</p></div>
+    ${pending.length ? `<ul class="approval-list">${pending.map((c) => {
+      const task = store.tasks.find((t) => t.id === c.taskId);
+      const child = childById(c.childId);
+      return `<li class="approval-card">
+        <span class="approval-card__icon" aria-hidden="true">${task?.icon || "❔"}</span>
+        <div class="approval-card__body">
+          <strong>${escapeHtml(task?.title || "Gelöschte Quest")}</strong>
+          <small>${child ? `${child.avatar} ${escapeHtml(child.name)}` : "Unbekanntes Kind"} · ${relativeDay(c.day)}, ${formatTime(c.timestamp)} · +${formatNumber(c.reward)} Momtaler</small>
+        </div>
+        <div class="approval-card__actions">
+          <button type="button" class="btn btn--primary btn--sm" data-approve="${c.id}" data-cta="freigaben_btn_bestaetigen_karte">Bestätigen</button>
+          <button type="button" class="btn btn--danger-ghost btn--sm" data-reject="${c.id}" data-cta="freigaben_btn_ablehnen_karte">Ablehnen</button>
+        </div>
+      </li>`;
+    }).join("")}</ul>` : emptyState({ icon: "✅", title: "Alles bearbeitet", text: "Gerade wartet keine Quest auf Bestätigung." })}`;
+
+  qsa("[data-approve]", panel).forEach((b) => b.addEventListener("click", () => {
+    try {
+      const result = approveCompletion(b.dataset.approve);
+      toast(`„${result.task?.title}“ bestätigt: +${formatNumber(result.completion.reward)} Momtaler`, { type: "success", icon: "🪙" });
+    } catch (err) {
+      toast(err.message, { type: "error" });
+    }
+  }));
+  qsa("[data-reject]", panel).forEach((b) => b.addEventListener("click", async () => {
+    const box = html(`<div>
+      <form class="form" data-reject-form novalidate>
+        <div class="field"><label for="reject-reason">Grund <small>(optional, das Kind sieht ihn)</small></label><input id="reject-reason" name="reason" type="text" maxlength="200" placeholder="z. B. Zimmer war noch nicht fertig"></div>
+        <div class="modal__actions"><button type="button" class="btn btn--ghost" data-cancel>Abbrechen</button><button type="submit" class="btn btn--danger">Ablehnen</button></div>
+      </form>
+    </div>`);
+    const dlg = openModal(box, { title: "Quest ablehnen" });
+    dlg.addEventListener("close", () => render());
+    qs("[data-cancel]", box).addEventListener("click", () => dlg.close());
+    qs("[data-reject-form]", box).addEventListener("submit", (e) => {
+      e.preventDefault();
+      try {
+        rejectCompletion(b.dataset.reject, new FormData(e.target).get("reason"));
+        toast("Quest abgelehnt, ist für das Kind wieder offen", { icon: "🔁" });
+        dlg.close();
+      } catch (err) {
+        toast(err.message, { type: "error" });
+      }
+    });
+  }));
 }
 
 /* ---------- Kinder ---------- */
@@ -121,14 +183,24 @@ function renderKinder(panel) {
     ${store.children.length ? `<ul class="admin-list">${store.children.map((c) => `
       <li class="admin-item" style="--child-color:${c.color}">
         <span class="admin-item__icon" aria-hidden="true">${c.avatar}</span>
-        <div class="admin-item__body"><strong>${escapeHtml(c.name)}</strong><small>${formatNumber(c.balance)} Momtaler · ${formatNumber(c.xp)} XP</small></div>
+        <div class="admin-item__body"><strong>${escapeHtml(c.name)}</strong><small>${formatNumber(c.balance)} Momtaler · ${formatNumber(c.xp)} XP${childHasPin(c.id) ? " · 🔒 PIN gesetzt" : ""}</small></div>
         <div class="admin-item__actions">
           <button type="button" class="btn btn--ghost btn--sm" data-edit-child="${c.id}">Bearbeiten</button>
+          ${childHasPin(c.id) ? `<button type="button" class="btn btn--ghost btn--sm" data-reset-pin="${c.id}">PIN zurücksetzen</button>` : ""}
           <button type="button" class="btn btn--danger-ghost btn--sm" data-remove-child="${c.id}" aria-label="${escapeHtml(c.name)} löschen">Löschen</button>
         </div>
       </li>`).join("")}</ul>` : emptyState({ icon: "👧", title: "Noch kein Kind angelegt" })}`;
   qs("[data-add-child]", panel).addEventListener("click", () => openChildForm());
   qsa("[data-edit-child]", panel).forEach((b) => b.addEventListener("click", () => openChildForm(childById(b.dataset.editChild))));
+  qsa("[data-reset-pin]", panel).forEach((b) => b.addEventListener("click", async () => {
+    const c = childById(b.dataset.resetPin);
+    const ok = await confirmDialog({ title: `PIN von ${c.name} zurücksetzen?`, text: "Das Profil ist danach ohne PIN erreichbar, bis eine neue gesetzt wird.", confirmLabel: "Zurücksetzen" });
+    if (ok) {
+      removeChildPin(c.id);
+      toast("PIN zurückgesetzt", { icon: "🔓" });
+      renderKinder(panel);
+    }
+  }));
   qsa("[data-remove-child]", panel).forEach((b) => b.addEventListener("click", async () => {
     const c = childById(b.dataset.removeChild);
     const ok = await confirmDialog({ title: `${c.name} löschen?`, text: "Alle Momtaler, Quests-Erledigungen und der Verlauf dieses Kindes werden endgültig gelöscht.", confirmLabel: "Endgültig löschen", danger: true });
@@ -281,7 +353,7 @@ function renderKonto(panel) {
   kontoChild = selected;
   const child = childById(selected);
   const tx = child ? transactionsFor(child.id).slice(0, 40) : [];
-  const completions = child ? store.completions.filter((c) => c.childId === child.id).slice(-10).reverse() : [];
+  const completions = child ? store.completions.filter((c) => c.childId === child.id && c.status === "approved").slice(-10).reverse() : [];
   panel.innerHTML = `
     <div class="section__head"><h2 class="section__title">Konto</h2></div>
     ${store.children.length ? `

@@ -15,7 +15,7 @@ function renderFilters() {
   root.innerHTML = `
     <div class="filters">
       <div class="segmented" role="group" aria-label="Status">
-        ${[["open", "Offen"], ["done", "Erledigt"], ["all", "Alle"]].map(([v, l]) => `<button type="button" class="segmented__btn ${filter.status === v ? "is-active" : ""}" data-filter="status" data-value="${v}" aria-pressed="${filter.status === v}">${l}</button>`).join("")}
+        ${[["open", "Offen"], ["pending", "Wartet"], ["done", "Erledigt"], ["all", "Alle"]].map(([v, l]) => `<button type="button" class="segmented__btn ${filter.status === v ? "is-active" : ""}" data-filter="status" data-value="${v}" aria-pressed="${filter.status === v}">${l}</button>`).join("")}
       </div>
       <div class="chips" role="group" aria-label="Kategorie">
         <button type="button" class="chip chip--filter ${filter.category === "all" ? "is-active" : ""}" data-filter="category" data-value="all" aria-pressed="${filter.category === "all"}">Alle</button>
@@ -53,8 +53,9 @@ function renderList() {
   const child = activeChild();
   if (!root || !child) return;
   let list = tasksFor(child.id);
-  if (filter.status === "open") list = list.filter((t) => !t.status.done);
-  if (filter.status === "done") list = list.filter((t) => t.status.done);
+  if (filter.status === "open") list = list.filter((t) => t.status.state === "open");
+  if (filter.status === "pending") list = list.filter((t) => t.status.state === "pending");
+  if (filter.status === "done") list = list.filter((t) => t.status.state === "done");
   if (filter.category !== "all") list = list.filter((t) => t.category === filter.category);
   if (filter.recurrence !== "all") list = list.filter((t) => t.recurrence === filter.recurrence);
   const sorters = {

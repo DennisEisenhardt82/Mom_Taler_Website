@@ -3,21 +3,10 @@
 
 import { getStore, commit, taskById, rewardById } from "./state.js";
 import { book } from "./transaktionen.js";
+import { hashPin, validatePinFormat } from "./auth.js";
 import { uid } from "./utils.js";
 
 const SESSION_KEY = "momtaler.parentUnlocked";
-
-async function hashPin(pin) {
-  const text = `momtaler:${pin}`;
-  if (window.crypto?.subtle) {
-    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
-  // Fallback ohne Web Crypto (z. B. http im Heimnetz): einfacher, aber ausreichend für einen Komfortschutz
-  let h = 5381;
-  for (let i = 0; i < text.length; i += 1) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
-  return `djb2:${h.toString(16)}`;
-}
 
 export function hasPin() {
   return Boolean(getStore()?.settings.parentPinHash);
@@ -35,7 +24,7 @@ export function isUnlocked() {
 export async function unlock(pin) {
   const store = getStore();
   if (!store.settings.parentPinHash) return true;
-  const hash = await hashPin(String(pin || ""));
+  const hash = await hashPin("parent", String(pin || ""));
   if (hash !== store.settings.parentPinHash) return false;
   try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* dann eben nur bis zum Reload */ }
   return true;
@@ -47,9 +36,9 @@ export function lock() {
 
 export async function setPin(pin) {
   const clean = String(pin || "").trim();
-  if (clean && !/^\d{4,6}$/.test(clean)) throw new Error("Die PIN besteht aus 4 bis 6 Ziffern.");
+  if (clean && !validatePinFormat(clean)) throw new Error("Die PIN besteht aus 4 bis 6 Ziffern.");
   const store = getStore();
-  store.settings.parentPinHash = clean ? await hashPin(clean) : null;
+  store.settings.parentPinHash = clean ? await hashPin("parent", clean) : null;
   commit("settings:pin");
   if (clean) {
     try { sessionStorage.setItem(SESSION_KEY, "1"); } catch { /* nichts */ }

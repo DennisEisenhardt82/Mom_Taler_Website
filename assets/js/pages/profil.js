@@ -1,10 +1,11 @@
-/* Profil: Rang, Abzeichen, Rekorde, Profilwechsel. */
+/* Profil: Rang, Abzeichen, Rekorde, Profilwechsel, eigene PIN. */
 
 import { getStore, subscribe, activeChild } from "../modules/state.js";
-import { setActiveChild } from "../modules/kinder.js";
+import { setActiveChild, logoutChild, childHasPin, verifyChildPin, setChildPin } from "../modules/kinder.js";
 import { levelInfo, effectiveStreak, achievementProgress } from "../modules/gamification.js";
-import { progressBar, toast } from "../modules/ui.js";
-import { qs, qsa, escapeHtml, formatNumber, formatDate } from "../modules/utils.js";
+import { progressBar, toast, openModal } from "../modules/ui.js";
+import { qs, qsa, escapeHtml, formatNumber, formatDate, html } from "../modules/utils.js";
+import { pageHref } from "../script.js";
 
 function render() {
   const root = qs("[data-profile]");
@@ -14,6 +15,7 @@ function render() {
   const lvl = levelInfo(child.xp);
   const badges = achievementProgress(child);
   const earned = badges.filter((b) => b.earned);
+  const hasPin = childHasPin(child.id);
 
   root.innerHTML = `
     <section class="hero-card" style="--child-color:${child.color}">
@@ -55,6 +57,12 @@ function render() {
       </dl>
     </section>
 
+    <section class="card" aria-labelledby="pin-title">
+      <h2 class="card__title" id="pin-title">Meine PIN</h2>
+      <p class="card__hint">${hasPin ? "Deine PIN schützt dein Profil, wenn jemand anderes dein Gerät benutzt." : "Noch keine PIN gesetzt. Leg eine fest, damit nur du dein Profil öffnen kannst."}</p>
+      <button type="button" class="btn btn--ghost" data-manage-pin>${hasPin ? "PIN ändern" : "PIN festlegen"}</button>
+    </section>
+
     ${store.children.length > 1 ? `
     <section class="section" aria-labelledby="switch-title">
       <div class="section__head"><h2 class="section__title" id="switch-title">Profil wechseln</h2></div>
@@ -62,19 +70,87 @@ function render() {
         ${store.children.map((c) => `<button type="button" class="profile-tile ${c.id === child.id ? "is-active" : ""}" data-pick="${c.id}" style="--child-color:${c.color}" ${c.id === child.id ? 'aria-current="true"' : ""}>
           <span class="profile-tile__avatar" aria-hidden="true">${c.avatar}</span>
           <span class="profile-tile__name">${escapeHtml(c.name)}</span>
-          <span class="profile-tile__meta">${formatNumber(c.balance)} Momtaler</span>
+          <span class="profile-tile__meta">${formatNumber(c.balance)} Momtaler${childHasPin(c.id) ? " · 🔒" : ""}</span>
         </button>`).join("")}
       </div>
-    </section>` : ""}`;
+    </section>` : ""}
 
-  qsa("[data-pick]", root).forEach((b) => b.addEventListener("click", () => {
-    if (b.dataset.pick === child.id) return;
-    setActiveChild(b.dataset.pick);
-    toast(`Jetzt unterwegs als ${activeChild().name}`, { icon: activeChild().avatar });
-  }));
+    <button type="button" class="btn btn--ghost btn--lg" data-logout>Abmelden</button>`;
+
+  qs("[data-manage-pin]", root).addEventListener("click", () => openPinForm(child, hasPin));
+  qs("[data-logout]", root).addEventListener("click", () => {
+    logoutChild();
+    window.location.href = pageHref("index");
+  });
+  qsa("[data-pick]", root).forEach((b) => b.addEventListener("click", () => switchTo(b.dataset.pick, child.id)));
+}
+
+async function switchTo(targetId, currentId) {
+  if (targetId === currentId) return;
+  if (!childHasPin(targetId)) {
+    doSwitch(targetId);
+    return;
+  }
+  const store = getStore();
+  const target = store.children.find((c) => c.id === targetId);
+  const box = html(`<div>
+    <form class="form" data-switch-pin novalidate>
+      <div class="field"><label for="switch-pin">PIN von ${escapeHtml(target.name)}</label><input id="switch-pin" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" required></div>
+      <p class="form__error" data-error role="alert" hidden></p>
+      <button type="submit" class="btn btn--primary btn--lg">Öffnen</button>
+    </form>
+  </div>`);
+  const dlg = openModal(box, { title: `${target.avatar} ${target.name}` });
+  const form = qs("form", box);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ok = await verifyChildPin(targetId, new FormData(form).get("pin"));
+    if (ok) {
+      dlg.close();
+      doSwitch(targetId);
+    } else {
+      const err = qs("[data-error]", form);
+      err.textContent = "Die PIN stimmt nicht.";
+      err.hidden = false;
+    }
+  });
+  qs("#switch-pin", form).focus();
+}
+
+function doSwitch(id) {
+  setActiveChild(id);
+  const child = activeChild();
+  toast(`Jetzt unterwegs als ${child.name}`, { icon: child.avatar });
+}
+
+function openPinForm(child, hasPin) {
+  const box = html(`<div>
+    <form class="form" data-pin-form novalidate>
+      ${hasPin ? `<div class="field"><label for="pin-current">Aktuelle PIN</label><input id="pin-current" name="current" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>` : ""}
+      <div class="field"><label for="pin-new">Neue PIN <small>(4 bis 6 Ziffern, leer = entfernen)</small></label><input id="pin-new" name="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"></div>
+      <p class="form__error" data-error role="alert" hidden></p>
+      <div class="modal__actions"><button type="submit" class="btn btn--primary">Speichern</button></div>
+    </form>
+  </div>`);
+  const dlg = openModal(box, { title: "Meine PIN" });
+  const form = qs("form", box);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const d = new FormData(form);
+    try {
+      await setChildPin(child.id, d.get("pin"), d.get("current"));
+      toast(d.get("pin") ? "PIN gespeichert" : "PIN entfernt", { type: "success", icon: "🔐" });
+      dlg.close();
+      render();
+    } catch (err) {
+      const el = qs("[data-error]", form);
+      el.textContent = err.message;
+      el.hidden = false;
+    }
+  });
 }
 
 export async function init() {
   render();
-  subscribe(() => render());
+  subscribe(() => { if (!document.querySelector("dialog[open]")) render(); });
 }

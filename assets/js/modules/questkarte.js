@@ -1,16 +1,23 @@
-/* Quest-Karte + Erledigen-Ablauf, geteilt von Dashboard und Questbrett. */
+/* Quest-Karte + Einreichen-Ablauf, geteilt von Dashboard und Questbrett.
+   Ein Tipp auf "Erledigt!" bucht noch keine Momtaler — die Quest geht in den
+   Status "wartet auf Bestätigung", bis ein Elternteil sie am Gildenschalter
+   freigibt (siehe modules/aufgaben.js). */
 
 import { activeChild, categoryInfo } from "./state.js";
-import { completeTask, tasksFor, RECURRENCE, DIFFICULTY } from "./aufgaben.js";
-import { levelInfo } from "./gamification.js";
-import { toast, coinBurst, levelUpOverlay, achievementOverlay, openModal } from "./ui.js";
+import { submitCompletion, tasksFor, RECURRENCE, DIFFICULTY } from "./aufgaben.js";
+import { toast, openModal } from "./ui.js";
 import { escapeHtml, formatNumber, formatTime, qs, html } from "./utils.js";
+
+const STATE_BADGE = {
+  pending: { icon: "⏳", label: "Wartet auf Bestätigung" },
+  done: { icon: "✓", label: "" },
+};
 
 export function questCard(task, { compact = false } = {}) {
   const cat = categoryInfo(task.category);
-  const done = task.status?.done;
+  const { state, label, doneAt } = task.status;
   const stars = "★".repeat(task.difficulty) + "☆".repeat(3 - task.difficulty);
-  return `<article class="quest ${done ? "is-done" : ""} ${compact ? "quest--compact" : ""}" data-task="${task.id}">
+  return `<article class="quest quest--${state} ${compact ? "quest--compact" : ""}" data-task="${task.id}">
     <span class="quest__icon" aria-hidden="true">${task.icon}</span>
     <div class="quest__body">
       <h3 class="quest__title">${escapeHtml(task.title)}</h3>
@@ -23,9 +30,11 @@ export function questCard(task, { compact = false } = {}) {
     </div>
     <div class="quest__side">
       <span class="quest__reward"><b>+${formatNumber(task.reward)}</b><small>Momtaler</small></span>
-      ${done
-        ? `<span class="quest__done">✓ ${task.status.label}${task.status.doneAt ? ` · ${formatTime(task.status.doneAt)}` : ""}</span>`
-        : `<button type="button" class="btn btn--primary btn--sm" data-complete="${task.id}" data-cta="quest_btn_erledigt_karte">Erledigt!</button>`}
+      ${state === "open"
+        ? `<button type="button" class="btn btn--primary btn--sm" data-submit="${task.id}" data-cta="quest_btn_erledigt_karte">Erledigt!</button>`
+        : state === "pending"
+          ? `<span class="quest__pending">⏳ Wartet auf Bestätigung${doneAt ? ` · ${formatTime(doneAt)}` : ""}</span>`
+          : `<span class="quest__done">✓ ${label}${doneAt ? ` · ${formatTime(doneAt)}` : ""}</span>`}
     </div>
   </article>`;
 }
@@ -33,10 +42,10 @@ export function questCard(task, { compact = false } = {}) {
 /* Klick-Handler für alle Erledigen-Buttons innerhalb eines Containers */
 export function bindQuestActions(root, { onDone } = {}) {
   root.addEventListener("click", async (e) => {
-    const btn = e.target.closest("[data-complete]");
+    const btn = e.target.closest("[data-submit]");
     if (btn) {
       e.stopPropagation();
-      await runComplete(btn);
+      await runSubmit(btn);
       onDone?.();
       return;
     }
@@ -45,21 +54,13 @@ export function bindQuestActions(root, { onDone } = {}) {
   });
 }
 
-async function runComplete(btn) {
+async function runSubmit(btn) {
   const child = activeChild();
   if (!child) return;
   btn.disabled = true;
   try {
-    const result = completeTask(btn.dataset.complete, child.id);
-    const target = qs("[data-balance]")?.closest(".chip") || qs("[data-treasure]");
-    coinBurst(btn, target, Math.min(12, 4 + Math.round(result.task.reward / 10)));
-    toast(`+${formatNumber(result.task.reward)} Momtaler für „${result.task.title}“`, { type: "success", icon: "🪙" });
-    if (result.level.levelUp) {
-      setTimeout(() => levelUpOverlay({ to: result.level.to, rank: levelInfo(child.xp).rank }), 500);
-    }
-    if (result.achievements.length) {
-      setTimeout(() => achievementOverlay(result.achievements), result.level.levelUp ? 900 : 500);
-    }
+    const result = submitCompletion(btn.dataset.submit, child.id);
+    toast(`„${result.task.title}“ eingereicht — wartet auf Bestätigung von Mama oder Papa.`, { type: "info", icon: "⏳" });
   } catch (err) {
     toast(err.message, { type: "error", icon: "⚠️" });
     btn.disabled = false;
@@ -72,6 +73,7 @@ export function openQuestDetail(taskId, root, onDone) {
   const task = tasksFor(child.id).find((t) => t.id === taskId);
   if (!task) return;
   const cat = categoryInfo(task.category);
+  const { state, label, doneAt } = task.status;
   const box = html(`<div class="quest-detail">
     <span class="quest-detail__icon" aria-hidden="true">${task.icon}</span>
     <p class="quest-detail__desc">${escapeHtml(task.description || "Keine Beschreibung.")}</p>
@@ -83,16 +85,18 @@ export function openQuestDetail(taskId, root, onDone) {
       <div><dt>Schwierigkeit</dt><dd>${DIFFICULTY[task.difficulty]}</dd></div>
     </dl>
     <div class="modal__actions">
-      ${task.status?.done
-        ? `<span class="quest__done">✓ ${task.status.label}</span>`
-        : `<button type="button" class="btn btn--primary btn--lg" data-complete="${task.id}" data-cta="quest_btn_erledigt_detail">Erledigt!</button>`}
+      ${state === "open"
+        ? `<button type="button" class="btn btn--primary btn--lg" data-submit="${task.id}" data-cta="quest_btn_erledigt_detail">Erledigt!</button>`
+        : state === "pending"
+          ? `<span class="quest__pending">⏳ Wartet auf Bestätigung${doneAt ? ` · ${formatTime(doneAt)}` : ""}</span>`
+          : `<span class="quest__done">✓ ${label}</span>`}
     </div>
   </div>`);
   const dlg = openModal(box, { title: task.title });
-  const btn = qs("[data-complete]", box);
+  const btn = qs("[data-submit]", box);
   if (btn) {
     btn.addEventListener("click", async () => {
-      await runComplete(btn);
+      await runSubmit(btn);
       dlg.close();
       onDone?.();
     });

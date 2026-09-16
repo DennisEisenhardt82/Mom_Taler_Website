@@ -266,7 +266,10 @@ button {
   left: var(--space-4);
   top: -100px;
   z-index: 100;
-  padding: var(--space-2) var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
   background: var(--wood-deep);
   color: #fff;
   border-radius: var(--radius-sm);
@@ -325,6 +328,7 @@ button:disabled, .btn:disabled {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  min-height: 44px;
   text-decoration: none;
   color: var(--text);
   margin-right: auto;
@@ -349,8 +353,8 @@ button:disabled, .btn:disabled {
 .topbar__avatar {
   display: inline-grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   font-size: 1.35rem;
   text-decoration: none;
@@ -369,8 +373,8 @@ button:disabled, .btn:disabled {
 }
 
 .topbar__theme {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 1px solid var(--border);
   background: var(--surface);
@@ -391,7 +395,7 @@ button:disabled, .btn:disabled {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
   background: var(--surface-2);
@@ -831,6 +835,9 @@ button:disabled, .btn:disabled {
   margin: 0;
 }
 .link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   background: none;
   border: 0;
   padding: 0;
@@ -938,7 +945,7 @@ button:disabled, .btn:disabled {
   border-color: var(--danger);
 }
 .btn--sm {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-4);
   font-size: var(--step--1);
 }
@@ -1040,10 +1047,15 @@ button:disabled, .btn:disabled {
   display: flex;
 }
 .segmented--wide .segmented__btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: var(--space-2);
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
 }
 .segmented__btn {
-  min-height: 40px;
+  min-height: 44px;
   padding: 0 var(--space-4);
   border: 0;
   border-radius: var(--radius-pill);
@@ -1075,6 +1087,7 @@ button:disabled, .btn:disabled {
 .chip--filter {
   cursor: pointer;
   flex: 0 0 auto;
+  min-height: 44px;
 }
 .chip--filter:hover,
 .chip--filter:focus-visible {
@@ -1475,9 +1488,57 @@ button:disabled, .btn:disabled {
   color: var(--primary-ink);
   border-bottom-color: var(--primary);
 }
+.tabs__btn--alert:not(.is-active) {
+  color: var(--gold-deep);
+}
 .tabs__panel {
   display: grid;
   gap: var(--space-4);
+}
+
+/* Freigaben (Aufgaben-Dashboard für Eltern) */
+.approval-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.approval-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--gold-soft);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+}
+.approval-card__icon {
+  font-size: 1.6rem;
+  width: 44px;
+  text-align: center;
+}
+.approval-card__body {
+  display: grid;
+  min-width: 0;
+}
+.approval-card__body small {
+  color: var(--text-muted);
+}
+.approval-card__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+@media (min-width: 768px) {
+  .approval-card {
+    grid-template-columns: auto 1fr auto;
+  }
+  .approval-card__actions {
+    grid-column: auto;
+  }
 }
 
 /* Admin-Listen (Eltern) */
@@ -1695,6 +1756,10 @@ button:disabled, .btn:disabled {
   line-height: 1.1;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
   color: #fff8e9;
+  overflow-wrap: break-word;
+}
+.hero__content {
+  min-width: 0;
 }
 .hero__lead {
   max-width: 34rem;
@@ -1739,7 +1804,7 @@ button:disabled, .btn:disabled {
   margin-inline: auto;
   width: 100%;
 }
-.section--profiles [data-profiles] {
+.section--profiles [data-login] {
   display: grid;
   gap: var(--space-4);
   justify-items: center;
@@ -1748,6 +1813,56 @@ button:disabled, .btn:disabled {
   width: 100%;
   max-width: 520px;
   text-align: left;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 640px;
+}
+@media (min-width: 640px) {
+  .role-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.role-card {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast), border-color var(--t-fast);
+}
+.role-card:hover,
+.role-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+.role-card:active {
+  transform: translateY(0);
+}
+.role-card--admin:hover,
+.role-card--admin:focus-visible {
+  border-color: var(--wood);
+}
+.role-card__icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+.role-card__title {
+  font-weight: 800;
+  font-size: var(--step-1);
+}
+.role-card__hint {
+  color: var(--text-muted);
+  font-size: var(--step--1);
 }
 
 .profile-grid {
@@ -2113,14 +2228,21 @@ button:disabled, .btn:disabled {
 .quest:active {
   transform: translateY(0);
 }
-.quest.is-done {
+.quest--done {
   opacity: 0.72;
   background: var(--surface-2);
 }
-.quest.is-done .quest__title {
+.quest--done .quest__title {
   text-decoration: line-through;
   text-decoration-color: var(--green);
   text-decoration-thickness: 2px;
+}
+.quest--pending {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+}
+.quest--pending .quest__icon {
+  animation: pulse-soft 2.4s ease-in-out infinite;
 }
 .quest__icon {
   display: grid;
@@ -2178,6 +2300,16 @@ button:disabled, .btn:disabled {
   color: var(--green);
   font-weight: 800;
   font-size: var(--step--1);
+}
+.quest__pending {
+  color: var(--gold-deep);
+  font-weight: 800;
+  font-size: var(--step--1);
+  white-space: nowrap;
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 .quest--compact .quest__meta {
   display: none;

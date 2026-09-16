@@ -54,6 +54,7 @@ export function newChild({ name, avatar = "🙂", color = "#B3261E" }) {
     name: String(name).trim(),
     avatar,
     color,
+    pinHash: null,
     createdAt: new Date().toISOString(),
     balance: 0,
     xp: 0,
@@ -97,6 +98,11 @@ function normalizeTask(raw) {
   };
 }
 
+function normalizeCompletion(raw) {
+  // Alte Daten (vor dem Freigabe-Workflow) wurden sofort gebucht -> als "approved" übernehmen.
+  return { status: "approved", ...raw };
+}
+
 function normalizeReward(raw) {
   return {
     id: raw.id || uid("r"),
@@ -117,7 +123,7 @@ export function buildStore(seed) {
       ...FALLBACK_SETTINGS,
       ...(seed.settings || {}),
       categories: { ...FALLBACK_SETTINGS.categories, ...(seed.settings?.categories || {}) },
-      activeChildId: children[0]?.id || null,
+      activeChildId: null, // erst per Login-Bildschirm setzen, kein Auto-Login
     },
     children,
     tasks: (seed.tasks || []).map(normalizeTask),
@@ -145,11 +151,14 @@ export function migrate(raw, seed) {
     tasks: (Array.isArray(s.tasks) ? s.tasks : []).map(normalizeTask),
     rewards: (Array.isArray(s.rewards) ? s.rewards : []).map(normalizeReward),
     achievements: Array.isArray(s.achievements) && s.achievements.length ? s.achievements : (seed?.achievements || []),
-    completions: Array.isArray(s.completions) ? s.completions : [],
+    completions: (Array.isArray(s.completions) ? s.completions : []).map(normalizeCompletion),
     redemptions: Array.isArray(s.redemptions) ? s.redemptions : [],
     transactions: Array.isArray(s.transactions) ? s.transactions : [],
   };
-  if (!migrated.children.some((c) => c.id === migrated.settings.activeChildId)) {
+  // Nur korrigieren, wenn eine aktive Kind-ID gesetzt war, die es nicht mehr gibt
+  // (z. B. Profil gelöscht) — ein bewusstes "kein aktives Kind" (null) bleibt null,
+  // sonst würde jeder Seitenaufruf automatisch wieder einloggen.
+  if (migrated.settings.activeChildId && !migrated.children.some((c) => c.id === migrated.settings.activeChildId)) {
     migrated.settings.activeChildId = migrated.children[0]?.id || null;
   }
   return migrated;

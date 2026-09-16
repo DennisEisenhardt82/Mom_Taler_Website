@@ -214,8 +214,11 @@ async function boot() {
   subscribe(updateShell);
 
   const store = getStore();
-  // Ohne Profil ergibt keine Seite außer Start, Eltern und Einstellungen Sinn.
-  if (!store.children.length && !["index", "eltern", "einstellungen"].includes(page)) {
+  const CHILD_AREA_PAGES = ["dashboard", "aufgaben", "belohnungen", "verlauf", "statistik", "profil"];
+  // Ohne eingeloggtes Kind (kein activeChildId, egal ob per Reset, Logout oder
+  // frischer Installation) führt kein direkter Link in den Kinder-Bereich — immer
+  // zurück zum Login auf der Startseite, damit die PIN-Auswahl nicht umgangen wird.
+  if (CHILD_AREA_PAGES.includes(page) && !store.settings.activeChildId) {
     window.location.replace(needsExtension ? "index.html" : "./");
     return;
   }
