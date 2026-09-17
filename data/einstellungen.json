@@ -2,8 +2,8 @@
   "theme": "system",
   "reduceMotion": false,
   "parentPinHash": null,
-  "dailyGoal": 3,
-  "weeklyGoal": 15,
+  "dailyGoal": 1,
+  "weeklyGoal": 5,
   "xpPerLevel": 100,
   "categories": {
     "haushalt": { "label": "Haushalt", "icon": "🏠" },
