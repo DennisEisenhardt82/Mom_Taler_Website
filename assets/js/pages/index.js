@@ -3,7 +3,7 @@
 import { getStore, subscribe } from "../modules/state.js";
 import { setActiveChild, childHasPin, verifyChildPin } from "../modules/kinder.js";
 import { levelInfo } from "../modules/gamification.js";
-import { pageHref } from "../script.js";
+import { pageHref } from "../modules/shell.js";
 import { qs, qsa, escapeHtml, formatNumber } from "../modules/utils.js";
 
 let view = "role"; // "role" | "children" | "pin"

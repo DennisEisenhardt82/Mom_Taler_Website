@@ -5,7 +5,7 @@ import { importStore, resetStore } from "../modules/data.js";
 import { clear as clearStorage, loadBrokenRaw } from "../modules/storage.js";
 import * as eltern from "../modules/eltern.js";
 import { toast, confirmDialog } from "../modules/ui.js";
-import { applyTheme, applyMotion, currentTheme, pageHref } from "../script.js";
+import { applyTheme, applyMotion, currentTheme, pageHref } from "../modules/shell.js";
 import { qs, qsa, formatNumber, html, dayKey } from "../modules/utils.js";
 
 function render() {
@@ -20,7 +20,7 @@ function render() {
     <section class="card" aria-labelledby="s-theme">
       <h2 class="card__title" id="s-theme">Farbschema</h2>
       <div class="segmented segmented--wide" role="group" aria-label="Farbschema">
-        ${[["light", "☀️ Hell"], ["dark", "🌙 Dunkel"], ["system", "🌗 System"]].map(([v, l]) => `<button type="button" class="segmented__btn ${theme === v ? "is-active" : ""}" data-theme-set="${v}" aria-pressed="${theme === v}">${l}</button>`).join("")}
+        ${[["light", "☀️ Hell"], ["dark", "🌙 Dunkel"]].map(([v, l]) => `<button type="button" class="segmented__btn ${theme === v ? "is-active" : ""}" data-theme-set="${v}" aria-pressed="${theme === v}">${l}</button>`).join("")}
       </div>
       <label class="check check--row"><input type="checkbox" data-motion ${motion ? "checked" : ""}> Animationen reduzieren</label>
     </section>

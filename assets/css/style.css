@@ -97,9 +97,9 @@
   --step-3: clamp(1.8rem, 1.4rem + 2vw, 2.6rem);
   --step-4: clamp(1.4rem, 0.8rem + 3.8vw, 3.8rem);
 
-  --header-h: 64px;
+  --header-h: 200px;
   --nav-h: 68px;
-  --sidebar-w: 240px;
+  --sidebar-w: 190px;
   --content-w: 1100px;
 
   --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
@@ -196,10 +196,6 @@ body {
   font-size: var(--step-0);
   line-height: 1.55;
   color: var(--text);
-  background-color: var(--bg);
-  background-image:
-    radial-gradient(1200px 600px at 50% -10%, rgba(255, 255, 255, 0.35), transparent 60%),
-    repeating-linear-gradient(0deg, rgba(91, 58, 30, 0.025) 0 2px, transparent 2px 6px);
   overflow-x: hidden;
 }
 
@@ -232,10 +228,6 @@ img, svg, picture {
 button, input, select, textarea {
   font: inherit;
   color: inherit;
-}
-
-button {
-  cursor: pointer;
 }
 
 :focus-visible {
@@ -287,7 +279,7 @@ button {
 body {
   cursor: url("../img/cursor/schwert.png") 1 1, default;
 }
-a, button, [role="button"], label, summary, select, .quest, .profile-tile, .chip--filter, .avatar-pick, .color-pick, .check {
+a, button, [role="button"], label, summary, select, .btn, .quest, .profile-tile, .chip--filter, .avatar-pick, .color-pick, .check, .avatar-pick input, .color-pick input, .toast {
   cursor: url("../img/cursor/hand-zeig.png") 11 0, pointer;
 }
 input:not([type="radio"]):not([type="checkbox"]):not([type="file"]), textarea {
@@ -302,125 +294,86 @@ button:disabled, .btn:disabled {
 .chips, .segmented, .tabs {
   cursor: url("../img/cursor/hand-offen.png") 14 0, grab;
 }
+.chips:active, .segmented:active, .tabs:active {
+  cursor: url("../img/cursor/faust.png") 13 1, grabbing;
+}
+[title], .hint, .card__hint {
+  cursor: url("../img/cursor/frage.png") 1 1, help;
+}
 @media (pointer: coarse) {
-  body, a, button, input, textarea, .chips, .segmented, .tabs {
+  body, a, button, input, textarea, .chips, .segmented, .tabs, [title], .hint, .card__hint {
     cursor: auto;
   }
 }
 
 /* ---------- 4 Hülle: Topbar ---------- */
+/* Keine klassische Bar mehr: zwei "Pillen" (Logo, Schriftzug), frei auf dem
+   Seitenhintergrund, nicht sticky. */
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: var(--space-2);
-  height: var(--header-h);
-  padding-inline: var(--space-3);
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-3);
 }
-@media (min-width: 400px) {
+@media (min-width: 480px) {
   .topbar {
-    gap: var(--space-3);
-    padding-inline: var(--space-4);
+    padding: var(--space-2) var(--space-5);
   }
 }
+/* Startseite: Kopfzeile schwebt transparent über der Burg-Szene, statt sie
+   nach unten zu drücken — so bleibt das Dach sichtbar. */
+.page-index .topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+}
 
-.topbar__logo {
+.brand-pill {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  text-decoration: none;
-  color: var(--text);
-  margin-right: auto;
-}
-.topbar__logo img {
-  width: 36px;
-  height: 36px;
-}
-.topbar__wordmark {
-  display: none;
-  font-family: var(--font-display);
-  font-size: 1.25rem;
-  letter-spacing: 0.02em;
-  color: var(--primary-ink);
-}
-@media (min-width: 400px) {
-  .topbar__wordmark {
-    display: inline-block;
-  }
-}
-
-.topbar__status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.topbar__avatar {
-  display: inline-grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 1.35rem;
-  text-decoration: none;
-  background: var(--surface-2);
-  border: 2px solid var(--child-color, var(--gold));
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+}
+.brand-pill--logo {
+  padding: 3px;
+  text-decoration: none;
   transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
 }
-.topbar__avatar:hover,
-.topbar__avatar:focus-visible {
-  transform: translateY(-2px);
+.brand-pill--logo:hover,
+.brand-pill--logo:focus-visible {
+  transform: translateY(-2px) scale(1.03);
   box-shadow: var(--shadow-md);
 }
-.topbar__avatar:active {
-  transform: translateY(0);
+.brand-pill--logo:active {
+  transform: translateY(0) scale(1);
+}
+.brand-pill--logo img {
+  width: clamp(56px, 13vw, 176px);
+  height: clamp(56px, 13vw, 176px);
+  border-radius: 50%;
+}
+.brand-pill--wordmark {
+  justify-self: center;
+  padding: 0 var(--space-5);
+  max-width: 100%;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+.topbar__wordmark-img {
+  display: block;
+  height: clamp(40px, 11vw, 148px);
+  width: auto;
+  max-width: 100%;
 }
 
-.topbar__theme {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 1.1rem;
-  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
-}
-.topbar__theme:hover,
-.topbar__theme:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-.topbar__theme:active {
-  transform: translateY(0);
-}
-.topbar__logout {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  font-size: 1.1rem;
-  transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast), background var(--t-fast);
-}
-.topbar__logout:hover,
-.topbar__logout:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-  background: var(--danger-soft);
-}
-.topbar__logout:active {
-  transform: translateY(0);
-}
-
-/* Chips (Guthaben, Streak, Filter) */
+/* Chips (Filter) */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -437,32 +390,6 @@ button:disabled, .btn:disabled {
   white-space: nowrap;
   transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast), background var(--t-fast);
 }
-.chip--coins {
-  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
-  border-color: var(--gold-deep);
-  color: var(--wood-deep);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.chip--coins:hover,
-.chip--coins:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-gold);
-}
-.chip--coins:active {
-  transform: translateY(0);
-}
-.chip--coins.is-pulse {
-  animation: pulse 0.7s var(--ease-out);
-}
-.chip__coin {
-  font-size: 1.1em;
-}
-.chip--streak {
-  background: var(--primary-soft);
-  border-color: transparent;
-  color: var(--primary-ink);
-}
 
 /* ---------- 4 Hülle: Navigation (mobil: Holzplanke unten) ---------- */
 .nav {
@@ -476,9 +403,8 @@ button:disabled, .btn:disabled {
   height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 30%),
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 3px, transparent 3px 22px),
-    var(--wood);
+    linear-gradient(180deg, rgba(20, 12, 5, 0.1), rgba(20, 12, 5, 0.55)),
+    url("../img/wood-plank-b.webp") center/cover;
   border-top: 3px solid var(--wood-deep);
   box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.25);
 }
@@ -602,32 +528,34 @@ button:disabled, .btn:disabled {
   }
 }
 
-/* Desktop: Sidebar links, Bottom-Nav weg */
+/* Desktop: kleine schwebende Holzbrett-Pille links, Bottom-Nav weg */
 @media (min-width: 1024px) {
   .nav {
-    top: var(--header-h);
-    bottom: 0;
+    top: calc(var(--header-h) + var(--space-3));
+    left: var(--space-4);
+    bottom: auto;
     right: auto;
     width: var(--sidebar-w);
     height: auto;
+    max-height: calc(100svh - var(--header-h) - var(--space-6));
+    overflow-y: auto;
     grid-template-columns: 1fr;
     align-content: start;
     gap: var(--space-1);
-    padding: var(--space-4) var(--space-3);
-    border-top: 0;
-    border-right: 3px solid var(--wood-deep);
-    box-shadow: 6px 0 20px rgba(0, 0, 0, 0.18);
+    padding: var(--space-3);
+    border: 3px solid var(--wood-deep);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
     background:
-      linear-gradient(90deg, rgba(255, 255, 255, 0.06), transparent 30%),
-      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.06) 0 3px, transparent 3px 22px),
-      var(--wood);
+      linear-gradient(180deg, rgba(20, 12, 5, 0.15), rgba(20, 12, 5, 0.55)),
+      url("../img/wood-plank-b.webp") center/cover;
   }
   .nav a {
     flex-direction: row;
     justify-content: flex-start;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--step-0);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--step--1);
     border-radius: var(--radius-sm);
   }
   .nav a.is-active::before {
@@ -661,7 +589,7 @@ button:disabled, .btn:disabled {
   body:not(.page-index) .app,
   body:not(.page-index) .footer {
     width: auto;
-    margin-left: var(--sidebar-w);
+    margin-left: calc(var(--sidebar-w) + var(--space-4) + var(--space-5));
   }
   body:not(.page-index) .topbar {
     padding-left: var(--space-5);
@@ -709,6 +637,29 @@ button:disabled, .btn:disabled {
 }
 
 /* ---------- 5 Layout ---------- */
+/* Pergament-Hintergrund sitzt erst ab dem Inhalt (App + Footer), nicht mehr
+   auf body — dadurch bleibt die Kopfzeile (.topbar) frei/transparent. Als
+   "Breakout" über 100vw, da .app/.footer selbst durch max-width schmaler
+   als der Viewport sein können. */
+.app,
+.footer {
+  position: relative;
+}
+.app::before,
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  margin-left: -50vw;
+  z-index: -1;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1200px 600px at 50% -10%, rgba(255, 255, 255, 0.35), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(91, 58, 30, 0.025) 0 2px, transparent 2px 6px);
+}
 .app {
   width: 100%;
   max-width: calc(var(--content-w) + 2 * var(--space-4));
@@ -801,6 +752,22 @@ button:disabled, .btn:disabled {
 .eyebrow--light {
   color: var(--gold-bright);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Schimmerndes "Willkommen" über dem Hero-Intro, ohne Banner-Hintergrund */
+.welcome-shimmer {
+  align-self: flex-start;
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  letter-spacing: 0.06em;
+  background: linear-gradient(100deg, #b87a12 0%, #fff3c4 20%, var(--gold-bright) 35%, #b87a12 55%, #b87a12 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+  animation: shimmer 7s linear infinite;
 }
 
 .page-head {
@@ -915,7 +882,6 @@ button:disabled, .btn:disabled {
   font-size: var(--step-0);
   text-decoration: none;
   white-space: nowrap;
-  cursor: pointer;
   transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast), background var(--t-fast), color var(--t-fast);
 }
 .btn:hover,
@@ -929,7 +895,6 @@ button:disabled, .btn:disabled {
 }
 .btn:disabled {
   opacity: 0.55;
-  cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
@@ -1115,7 +1080,6 @@ button:disabled, .btn:disabled {
   scrollbar-width: thin;
 }
 .chip--filter {
-  cursor: pointer;
   flex: 0 0 auto;
   min-height: 44px;
 }
@@ -1241,7 +1205,6 @@ button:disabled, .btn:disabled {
   border: 2px solid var(--border);
   background: var(--surface-2);
   font-size: 1.4rem;
-  cursor: pointer;
   transition: transform var(--t-fast) var(--ease-out), border-color var(--t-fast);
 }
 .avatar-pick input,
@@ -1250,7 +1213,6 @@ button:disabled, .btn:disabled {
   inset: 0;
   opacity: 0;
   margin: 0;
-  cursor: pointer;
 }
 .avatar-pick:hover,
 .color-pick:hover {
@@ -1283,7 +1245,6 @@ button:disabled, .btn:disabled {
   border: 1px solid var(--border);
   background: var(--surface-2);
   font-weight: 700;
-  cursor: pointer;
 }
 .check input {
   width: 20px;
@@ -1719,7 +1680,6 @@ button:disabled, .btn:disabled {
   font-size: var(--step--1);
 }
 .chart__data summary {
-  cursor: pointer;
   color: var(--text-muted);
   font-weight: 700;
 }
@@ -1746,9 +1706,14 @@ button:disabled, .btn:disabled {
   position: relative;
   display: flex;
   align-items: stretch;
-  min-height: calc(100svh - var(--header-h));
+  min-height: min(92svh, 760px);
   color: #fff;
   isolation: isolate;
+}
+@media (min-width: 768px) {
+  .hero {
+    min-height: 100svh;
+  }
 }
 .hero__media {
   position: absolute;
@@ -1760,7 +1725,7 @@ button:disabled, .btn:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 40%;
+  object-position: center 28%;
 }
 .hero__media::after {
   content: "";
@@ -2235,7 +2200,6 @@ button:disabled, .btn:disabled {
   border: 1px solid var(--border);
   border-radius: 6px 14px 6px 14px;
   box-shadow: var(--shadow-sm);
-  cursor: pointer;
   transition: transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
 }
 .quest::before {
@@ -2549,6 +2513,71 @@ button:disabled, .btn:disabled {
   margin-top: var(--space-1);
 }
 
+/* ---------- 7 Seiten: Profil-Kopf + Trophäenwand ---------- */
+.profile-top {
+  display: grid;
+  gap: var(--space-5);
+}
+.profile-top__main {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+@media (min-width: 900px) {
+  .profile-top {
+    grid-template-columns: 1fr 260px;
+    align-items: start;
+  }
+}
+.trophy-wall {
+  padding: var(--space-4);
+  border: 3px solid var(--wood-deep);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  background:
+    linear-gradient(180deg, rgba(20, 12, 5, 0.2), rgba(20, 12, 5, 0.55)),
+    url("../img/wood-plank-a.webp") center/cover;
+}
+.trophy-wall__title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--step-1);
+  text-align: center;
+  color: var(--gold-bright);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.trophy-wall__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: var(--space-3);
+}
+.trophy {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-inline: auto;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--gold-soft), var(--gold-deep) 120%);
+  border: 3px solid var(--gold-bright);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.35);
+}
+.trophy__icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+.trophy-wall__empty {
+  margin: 0;
+  color: rgba(243, 227, 196, 0.85);
+  font-size: var(--step--1);
+  text-align: center;
+}
+
 /* ---------- 7 Seiten: Text (Impressum/Datenschutz), Fehler ---------- */
 .prose h2 {
   font-size: var(--step-1);
@@ -2615,7 +2644,6 @@ button:disabled, .btn:disabled {
   transform: translateY(12px);
   transition: opacity var(--t-base), transform var(--t-base) var(--ease-out);
   pointer-events: auto;
-  cursor: pointer;
 }
 .toast.is-in {
   opacity: 1;
@@ -2822,6 +2850,122 @@ button:disabled, .btn:disabled {
   }
 }
 
+/* ---------- 8b Nach-oben-Button (Schatzkiste) ---------- */
+.to-top {
+  position: fixed;
+  right: var(--space-4);
+  bottom: calc(var(--nav-h) + var(--space-4) + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  transform: translateY(12px) scale(0.9);
+  pointer-events: none;
+  transition: opacity var(--t-base), transform var(--t-base) var(--ease-out);
+}
+.to-top.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.page-index .to-top {
+  bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .to-top {
+    bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+  }
+}
+.to-top__chest {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(var(--shadow-md));
+  transition: filter var(--t-base);
+}
+.to-top__shadow {
+  fill: rgba(0, 0, 0, 0.25);
+  transition: opacity var(--t-base);
+}
+.to-top__body {
+  fill: var(--wood);
+  stroke: var(--wood-deep);
+  stroke-width: 1.5;
+}
+.to-top__band-v,
+.to-top__band-h {
+  fill: var(--gold-deep);
+}
+.to-top__lock {
+  fill: var(--gold-bright);
+  stroke: var(--wood-deep);
+  stroke-width: 1;
+}
+.to-top__lid {
+  transform-origin: 32px 22px;
+  transition: transform 420ms var(--ease-out);
+}
+.to-top__lid-shape {
+  fill: var(--wood-light);
+  stroke: var(--wood-deep);
+  stroke-width: 1.5;
+}
+/* Hover: goldener Schimmer über der Truhe */
+.to-top__body::after {
+  content: "";
+}
+.to-top:hover .to-top__band-v,
+.to-top:hover .to-top__band-h,
+.to-top:focus-visible .to-top__band-v,
+.to-top:focus-visible .to-top__band-h {
+  fill: var(--gold-bright);
+}
+.to-top:hover .to-top__chest,
+.to-top:focus-visible .to-top__chest {
+  filter: drop-shadow(var(--shadow-gold));
+}
+.to-top:hover .to-top__lid,
+.to-top:focus-visible .to-top__lid {
+  transform: rotate(-8deg) translateY(-1px);
+}
+.to-top__sparkle {
+  position: absolute;
+  color: var(--gold-bright);
+  font-size: 0.8rem;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 0 4px rgba(255, 215, 100, 0.8);
+}
+.to-top__sparkle--1 { top: 2px; left: 6px; }
+.to-top__sparkle--2 { top: -2px; right: 4px; }
+.to-top__sparkle--3 { bottom: 4px; left: 50%; }
+.to-top:hover .to-top__sparkle,
+.to-top:focus-visible .to-top__sparkle {
+  animation: sparkle-twinkle 1.4s ease-in-out infinite;
+}
+.to-top__sparkle--2 { animation-delay: 0.3s; }
+.to-top__sparkle--3 { animation-delay: 0.6s; }
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+/* Klick: Deckel klappt weit auf, kleiner "Öffnen"-Puls */
+.to-top.is-opening .to-top__lid {
+  transform: rotate(-100deg) translate(-4px, -6px);
+  transition: transform 380ms var(--ease-out);
+}
+.to-top.is-opening .to-top__chest {
+  animation: chest-pop 380ms var(--ease-out);
+}
+@keyframes chest-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
 /* ---------- 9 Reduzierte Bewegung, Print ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -2844,7 +2988,7 @@ button:disabled, .btn:disabled {
 }
 
 @media print {
-  .topbar, .nav, .footer, .toasts, .btn, .skip-link {
+  .topbar, .nav, .footer, .toasts, .btn, .skip-link, .to-top {
     display: none !important;
   }
   body {

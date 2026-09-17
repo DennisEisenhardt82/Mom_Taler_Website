@@ -26,20 +26,12 @@
   <a class="skip-link" href="#main">Zum Inhalt springen</a>
   <!-- header:start -->
 <header class="topbar">
-  <a class="topbar__logo" href="./" aria-label="Momtaler, zur Startseite">
-    <img src="assets/img/logo.svg" alt="" width="36" height="36">
-    <span class="topbar__wordmark">Momtaler</span>
+  <a class="brand-pill brand-pill--logo" href="./" aria-label="Family Tales, zur Startseite">
+    <img src="assets/img/logo.png" alt="" width="176" height="176">
   </a>
-  <div class="topbar__status" data-status hidden>
-    <span class="chip chip--streak" data-streak hidden></span>
-    <a class="chip chip--coins" href="belohnungen" aria-label="Zur Schatzkammer">
-      <span class="chip__coin" aria-hidden="true">🪙</span>
-      <span data-balance>0</span>
-    </a>
-    <a class="topbar__avatar" href="profil" data-avatar aria-label="Profil"></a>
-    <button type="button" class="topbar__logout" data-logout aria-label="Abmelden" title="Abmelden">🚪</button>
+  <div class="brand-pill brand-pill--wordmark">
+    <img class="topbar__wordmark-img" src="assets/img/wordmark.png" alt="Family Tales" width="1731" height="840">
   </div>
-  <button type="button" class="topbar__theme" data-theme-toggle aria-label="Farbschema wechseln">🌗</button>
 </header>
 <nav class="nav" aria-label="Hauptnavigation">
   <a href="dashboard" data-nav="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Start</span></a>
@@ -81,8 +73,24 @@
     <a href="impressum">Impressum</a>
     <a href="datenschutz">Datenschutz</a>
   </nav>
-  <p class="footer__copy">&copy; <span id="footer-year">2026</span> Momtaler · Läuft komplett in deinem Browser, ohne Server und ohne&nbsp;Tracking. Alle Angaben ohne&nbsp;Gewähr.</p>
+  <p class="footer__copy">&copy; <span id="footer-year">2026</span> Family Tales · Läuft komplett in deinem Browser, ohne Server und ohne&nbsp;Tracking. Alle Angaben ohne&nbsp;Gewähr.</p>
 </footer>
+<button type="button" class="to-top" data-to-top aria-label="Zurück nach oben" hidden>
+  <svg class="to-top__chest" viewBox="0 0 64 48" aria-hidden="true">
+    <ellipse class="to-top__shadow" cx="32" cy="43" rx="22" ry="3"/>
+    <rect class="to-top__body" x="8" y="22" width="48" height="20" rx="3"/>
+    <rect class="to-top__band-v" x="29" y="22" width="6" height="20"/>
+    <rect class="to-top__band-h" x="8" y="30" width="48" height="4"/>
+    <g class="to-top__lid">
+      <path class="to-top__lid-shape" d="M8 22 Q8 7 32 7 Q56 7 56 22 Z"/>
+      <rect class="to-top__band-v" x="29" y="7" width="6" height="15"/>
+      <rect class="to-top__lock" x="27" y="17" width="10" height="9" rx="1.5"/>
+    </g>
+  </svg>
+  <span class="to-top__sparkle to-top__sparkle--1" aria-hidden="true">✦</span>
+  <span class="to-top__sparkle to-top__sparkle--2" aria-hidden="true">✧</span>
+  <span class="to-top__sparkle to-top__sparkle--3" aria-hidden="true">✦</span>
+</button>
 <!-- footer:end -->
   <script type="module" src="assets/js/script.js?v=1.0"></script>
 </body>

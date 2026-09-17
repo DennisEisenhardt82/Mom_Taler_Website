@@ -5,8 +5,9 @@ import { ensureStore } from "./modules/data.js";
 import { getStore, subscribe, activeChild, storageWarning } from "./modules/state.js";
 import { effectiveStreak } from "./modules/gamification.js";
 import { logoutChild } from "./modules/kinder.js";
-import { countUp, toast, errorCard, confirmDialog } from "./modules/ui.js";
+import { countUp, toast, errorCard, confirmDialog, confetti } from "./modules/ui.js";
 import { qs, qsa, html, escapeHtml } from "./modules/utils.js";
+import { currentTheme, applyTheme, pageHref, detectCleanUrls, fixInternalLinks, needsExtensionValue } from "./modules/shell.js";
 
 const PAGES = {
   index: () => import("./pages/index.js"),
@@ -22,47 +23,8 @@ const PAGES = {
 
 /* ---------- Theme ---------- */
 
-const THEMES = ["system", "light", "dark"];
-const THEME_ICONS = { system: "🌗", light: "☀️", dark: "🌙" };
-const THEME_LABELS = { system: "System", light: "Hell", dark: "Dunkel" };
-
-export function currentTheme() {
-  try {
-    return localStorage.getItem("momtaler.theme") || "system";
-  } catch {
-    return "system";
-  }
-}
-
-export function applyTheme(theme) {
-  const t = THEMES.includes(theme) ? theme : "system";
-  if (t === "system") document.documentElement.removeAttribute("data-theme");
-  else document.documentElement.setAttribute("data-theme", t);
-  try { localStorage.setItem("momtaler.theme", t); } catch { /* egal */ }
-  const store = getStore();
-  if (store) store.settings.theme = t;
-  qsa("[data-theme-toggle]").forEach((btn) => {
-    btn.textContent = THEME_ICONS[t];
-    btn.setAttribute("aria-label", `Farbschema: ${THEME_LABELS[t]}. Klicken zum Wechseln`);
-    btn.title = `Farbschema: ${THEME_LABELS[t]}`;
-  });
-}
-
-export function applyMotion(reduce) {
-  if (reduce) document.documentElement.setAttribute("data-motion", "reduce");
-  else document.documentElement.removeAttribute("data-motion");
-  try { localStorage.setItem("momtaler.motion", reduce ? "reduce" : "auto"); } catch { /* egal */ }
-}
-
-function initThemeToggle() {
+function initTheme() {
   applyTheme(currentTheme());
-  qsa("[data-theme-toggle]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const next = THEMES[(THEMES.indexOf(currentTheme()) + 1) % THEMES.length];
-      applyTheme(next);
-      toast(`Farbschema: ${THEME_LABELS[next]}`, { icon: THEME_ICONS[next], timeout: 1500 });
-    });
-  });
 }
 
 /* ---------- Abmelden ---------- */
@@ -80,6 +42,28 @@ function initLogout() {
       logoutChild();
       window.location.href = pageHref("index");
     });
+  });
+}
+
+/* ---------- Nach-oben-Button (Schatzkiste) ---------- */
+
+function initToTop() {
+  const btn = qs("[data-to-top]");
+  if (!btn) return;
+  btn.hidden = false; // Sichtbarkeit läuft über die .is-visible-Klasse, nicht über [hidden]
+
+  const onScroll = () => {
+    btn.classList.toggle("is-visible", window.scrollY > 300);
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("is-opening")) return;
+    btn.classList.add("is-opening");
+    confetti(24);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 150);
+    setTimeout(() => btn.classList.remove("is-opening"), 900);
   });
 }
 
@@ -157,56 +141,16 @@ function showBanner(message, type = "warn") {
   main.prepend(html(`<div class="banner banner--${type}" role="alert">${escapeHtml(message)}</div>`));
 }
 
-/* ---------- Saubere URLs ohne Server-Rewrite (Live Server, file://) ---------- */
-
-const INTERNAL_PAGES = ["dashboard", "aufgaben", "belohnungen", "verlauf", "statistik", "profil", "eltern", "einstellungen", "impressum", "datenschutz"];
-let needsExtension = null;
-
-/* Prüft einmal, ob der Server extensionslose URLs auflöst. Wenn nicht (VS-Code-Live-Server,
-   einfacher Python-Server, file://), bekommen interne Links zur Laufzeit ihre .html-Endung. */
-async function detectCleanUrls() {
-  if (needsExtension !== null) return needsExtension;
-  const path = window.location.pathname;
-  if (window.location.protocol === "file:") {
-    needsExtension = true;
-  } else if (/\.html$/i.test(path) || path.endsWith("/")) {
-    // Seite wurde mit Endung oder als Ordner-Index geöffnet: einmal testen, ob Rewrite existiert
-    try {
-      const res = await fetch("dashboard", { method: "HEAD", cache: "no-store" });
-      needsExtension = !res.ok;
-    } catch {
-      needsExtension = true;
-    }
-  } else {
-    needsExtension = false;
-  }
-  if (needsExtension) fixInternalLinks(document);
-  return needsExtension;
-}
-
-export function pageHref(name) {
-  if (name === "index") return needsExtension ? "index.html" : "./";
-  return needsExtension ? `${name}.html` : name;
-}
-
-function fixInternalLinks(root) {
-  qsa("a[href]", root).forEach((a) => {
-    const href = a.getAttribute("href");
-    const [path, hash] = href.split("#");
-    if (INTERNAL_PAGES.includes(path)) a.setAttribute("href", `${path}.html${hash ? "#" + hash : ""}`);
-    else if (href === "./") a.setAttribute("href", "index.html");
-  });
-}
-
 /* ---------- Start ---------- */
 
 async function boot() {
-  initThemeToggle();
+  initTheme();
   initTracking();
   initNav();
   initLogout();
+  initToTop();
   await detectCleanUrls();
-  if (needsExtension) {
+  if (needsExtensionValue()) {
     // Dynamisch gerenderte Inhalte ebenfalls anpassen
     new MutationObserver((muts) => muts.forEach((m) => m.addedNodes.forEach((n) => {
       if (n.nodeType === 1) fixInternalLinks(n);
@@ -240,7 +184,7 @@ async function boot() {
   // frischer Installation) führt kein direkter Link in den Kinder-Bereich — immer
   // zurück zum Login auf der Startseite, damit die PIN-Auswahl nicht umgangen wird.
   if (CHILD_AREA_PAGES.includes(page) && !store.settings.activeChildId) {
-    window.location.replace(needsExtension ? "index.html" : "./");
+    window.location.replace(needsExtensionValue() ? "index.html" : "./");
     return;
   }
 
